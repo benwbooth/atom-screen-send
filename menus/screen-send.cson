@@ -1,0 +1,30 @@
+# See https://atom.io/docs/latest/hacking-atom-package-word-count#menus for more details
+'context-menu':
+  'atom-text-editor': [
+    {
+      'label': 'List Sessions'
+      'command': 'screen-send:list'
+    },
+    {
+      'label': 'Send to Session'
+      'command': 'screen-send:send'
+    }
+  ]
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'screen-send'
+      'submenu': [
+        {
+          'label': 'List Sessions'
+          'command': 'screen-send:list'
+        },
+        {
+          'label': 'Send to Session'
+          'command': 'screen-send:send'
+        }
+      ]
+    ]
+  }
+]
