@@ -91,6 +91,7 @@ module.exports = ScreenSend =
     if text == ""
       editor.setSelectedBufferRange(editor.getCurrentParagraphBufferRange())
       text = editor.getSelectedText()
+      text += "\n" if !text.match(/\n$/)
 
     editor.getLastSelection().clear()
     editor.setCursorBufferPosition(pos)
