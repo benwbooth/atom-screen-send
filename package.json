@@ -1,13 +1,21 @@
 {
   "name": "screen-send",
   "main": "./lib/screen-send",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Send text to iTerm2, Terminal.app, Konsole, Tmux or Screen sessions",
   "keywords": [
-    "terminal","iterm2","screen","konsole","tmux","send"
+    "terminal",
+    "iterm2",
+    "screen",
+    "konsole",
+    "tmux",
+    "send"
   ],
   "activationCommands": {
-    "atom-workspace": ["screen-send:list", "screen-send:send"]
+    "atom-workspace": [
+      "screen-send:list",
+      "screen-send:send"
+    ]
   },
   "repository": "https://github.com/benwbooth/atom-screen-send",
   "license": "MIT",
