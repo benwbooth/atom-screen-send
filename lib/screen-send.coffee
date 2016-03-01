@@ -7,7 +7,7 @@ fs = require('fs')
 module.exports = ScreenSend =
   screenSendView: null
   subscriptions: null
-  session: null
+  session: {}
 
   config:
     terminalType:
@@ -53,12 +53,14 @@ module.exports = ScreenSend =
       else throw "Unknown terminal type: #{atom.config.get('screen-send.terminalType')}"
 
     @screenSendView = new ScreenSendView sessions, (session)=>
-      @session = if atom.config.get('screen-send.terminalType') == 'iTerm 2' then @itermGetId(session) else session
+      bufid = atom.workspace.getActiveTextEditor().getBuffer().getId()
+      @session[bufid] = if atom.config.get('screen-send.terminalType') == 'iTerm 2' then @itermGetId(session) else session
       #console.log("list: session=#{@session}")
       @send() if send
 
   send: ->
-    if !@session
+    bufid = atom.workspace.getActiveTextEditor().getBuffer().getId()
+    if !@session[bufid]
       @list(true)
       return
     text = @getSelectedText()
@@ -74,14 +76,14 @@ module.exports = ScreenSend =
       when 'Tmux' then @tmuxSend
       else throw "Unknown terminal type: #{atom.config.get('screen-send.terminalType')}"
 
-    @sendText(text, sleep, sendFn)
+    @sendText(text, sleep, sendFn, @session[bufid])
 
-  sendText: (text, sleep, sendFn) ->
+  sendText: (text, sleep, sendFn, session) ->
     return if text.length == 0
-    sendFn.call(this, text[0])
+    sendFn.call(this, text[0], session)
     return if text.length == 1
     setTimeout ( ->
-      @sendText(text.slice(1))
+      @sendText(text.slice(1), sleep, sendFn, session)
     ), sleep
 
   getSelectedText: ->
@@ -113,14 +115,14 @@ module.exports = ScreenSend =
     list = stdout.toString('utf8').replace(/\n$/,'').split(",[ \n]*")
     return list
 
-  macosxTerminalSend: (text) ->
+  macosxTerminalSend: (text, session) ->
     {path, fd} = temp.openSync('screen-send.')
     fs.write(fd, text)
     execFileSync 'osascript', [
       '-e',"set f to \"#{path}\"",
       '-e','open for access f',
       '-e','set c to (read f)',
-      '-e',"tell application \"Terminal\" to do script c in first tab of first window where tty is \"#{@session}\"",
+      '-e',"tell application \"Terminal\" to do script c in first tab of first window where tty is \"#{session}\"",
     ]
     fs.unlink(path)
 
@@ -134,11 +136,11 @@ module.exports = ScreenSend =
     id = stdout.toString('utf8').trim()
     return id
 
-  itermSend: (text) ->
+  itermSend: (text, session) ->
     {path, fd} = temp.openSync('screen-send.')
     fs.write(fd, text)
     #console.log("sending text=", text)
-    execFileSync 'osascript', ['-e',"tell application \"iTerm\" to tell terminals to tell session id \"#{@session}\" to write contents of file \"#{path}\""]
+    execFileSync 'osascript', ['-e',"tell application \"iTerm\" to tell terminals to tell session id \"#{session}\" to write contents of file \"#{path}\""]
     fs.unlink(path)
 
   konsoleSessions: ->
@@ -148,8 +150,8 @@ module.exports = ScreenSend =
     list.push(matches[1]) while matches = regex.exec(input)
     return list
 
-  konsoleSend: (text) ->
-    execFileSync 'qdbus', ['org.kde.konsole',"/Sessions/#{@session}",'sendText',text]
+  konsoleSend: (text, session) ->
+    execFileSync 'qdbus', ['org.kde.konsole',"/Sessions/#{session}",'sendText',text]
 
   screenSessions: ->
     stdout = execFileSync 'screen', ['-list']
@@ -158,11 +160,11 @@ module.exports = ScreenSend =
     list.push(matches[1]) while matches = regex.exec(input)
     return list
 
-  screenSend: (text) ->
+  screenSend: (text, session) ->
     {path, fd} = temp.openSync('screen-send.')
     fs.write(fd, text)
     execFileSync 'screen', [
-      '-S', @session,
+      '-S', session,
       '-X', 'eval',
       'msgminwait 0',
       'msgwait 0',
@@ -180,11 +182,11 @@ module.exports = ScreenSend =
     list.push(matches[1]) while matches = regex.exec(input)
     return list
 
-  tmuxSend: (text) ->
+  tmuxSend: (text, session) ->
     {path, fd} = temp.openSync('screen-send.')
     fs.write(fd, text)
     execFileSync 'tmux', [
       'load-buffer', path, ';',
-      'paste-buffer','-t',@session,';'
+      'paste-buffer','-t',session,';'
     ]
     fs.unlink(path)
