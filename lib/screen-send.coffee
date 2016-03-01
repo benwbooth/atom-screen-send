@@ -143,7 +143,9 @@ module.exports = ScreenSend =
 
   konsoleSessions: ->
     stdout = execFileSync 'qdbus', ['org.kde.konsole']
-    list = (m.match(/^\/Sessions\/([^\n]+)$/)[1] for m in stdout.toString('utf8').match(/^\/Sessions\/[^\n]+$/gm))
+    input = stdout.toString('utf8')
+    matches = []; list = []; regex = /^\/Sessions\/([^\n]+)$/gm
+    list.push(matches[1]) while matches = regex.exec(input)
     return list
 
   konsoleSend: (text) ->
@@ -151,7 +153,9 @@ module.exports = ScreenSend =
 
   screenSessions: ->
     stdout = execFileSync 'screen', ['-list']
-    list = (m.trim() for m in stdout.toString('utf8').match(/^\s+(\S+)$/gm))
+    input = stdout.toString('utf8')
+    matches = []; list = []; regex = /^\s+(\S+)/gm
+    list.push(matches[1]) while matches = regex.exec(input)
     return list
 
   screenSend: (text) ->
@@ -171,7 +175,9 @@ module.exports = ScreenSend =
 
   tmuxSessions: ->
     stdout = execFileSync 'tmux', ['list-sessions']
-    list = (m.replace(/^([^:]*):/,"$1") for m in stdout.toString('utf8').match(/^[^:]*:/gm))
+    input = stdout.toString('utf8')
+    matches = []; list = []; regex = /^([^:]*):/gm
+    list.push(matches[1]) while matches = regex.exec(input)
     return list
 
   tmuxSend: (text) ->
