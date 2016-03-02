@@ -1,5 +1,5 @@
 ScreenSendView = require './screen-send-view'
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, Range} = require 'atom'
 execFileSync = require("child_process").execFileSync
 temp = require('temp')
 fs = require('fs')
@@ -91,7 +91,7 @@ module.exports = ScreenSend =
     pos = editor.getCursorBufferPosition()
     text = editor.getSelectedText()
     if text == ""
-      editor.setSelectedBufferRange(editor.getCurrentParagraphBufferRange())
+      editor.setSelectedBufferRange(@rowRangeForParagraphAtBufferRow(editor, pos.row))
       text = editor.getSelectedText()
       text += "\n" if !text.match(/\n$/)
 
@@ -109,6 +109,26 @@ module.exports = ScreenSend =
       chunks[chunks.length-1] += line
       chunks.push('') if chunks[chunks.length-1].length >= chunkSize
     return chunks
+
+  # Find a row range for a 'paragraph' around specified bufferRow. A paragraph
+  # is a block of text bounded by and empty line.
+  # Adapted from: https://github.com/atom/atom/blob/master/src/language-mode.coffee
+  rowRangeForParagraphAtBufferRow: (editor, bufferRow) ->
+    return unless /\S/.test(editor.lineTextForBufferRow(bufferRow))
+    [firstRow, lastRow] = [0, editor.getLastBufferRow()-1]
+
+    startRow = bufferRow
+    while startRow > firstRow
+      break unless /\S/.test(editor.lineTextForBufferRow(startRow - 1))
+      startRow--
+
+    endRow = bufferRow
+    lastRow = editor.getLastBufferRow()
+    while endRow < lastRow
+      break unless /\S/.test(editor.lineTextForBufferRow(endRow + 1))
+      endRow++
+
+    new Range([startRow, 0], [endRow, editor.lineTextForBufferRow(endRow).length])
 
   macosxTerminalSessions: ->
     stdout = execFileSync 'osascript', ['-e','tell application "Terminal" to tell windows to tell tabs to return tty']
