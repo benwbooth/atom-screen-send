@@ -82,7 +82,7 @@ module.exports = ScreenSend =
     return if text.length == 0
     sendFn.call(this, text[0], session)
     return if text.length == 1
-    setTimeout ( ->
+    setTimeout ( =>
       @sendText(text.slice(1), sleep, sendFn, session)
     ), sleep
 
