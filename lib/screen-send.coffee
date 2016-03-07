@@ -165,19 +165,20 @@ module.exports = ScreenSend =
 
   konsoleSessions: ->
     stdout = execFileSync 'qdbus', ['org.kde.konsole*']
-    konsole = stdout.toString('utf8').split(/\r?\n/)[0]
-    throw "Konsole is not running!" if !konsole
-    stdout = execFileSync 'qdbus', [konsole]
-    input = stdout.toString('utf8')
-    matches = []; list = []; regex = /^\/Sessions\/([^\n]+)$/gm
-    list.push(matches[1]) while matches = regex.exec(input)
+    konsole = stdout.toString('utf8').split(/\r?\n/)
+    list = []
+    for k in konsole
+      if k
+        stdout = execFileSync 'qdbus', [k]
+        input = stdout.toString('utf8')
+        matches = []; regex = /^\/Sessions\/([^\n]+)$/gm
+        list.push(k+"\t"+matches[1]) while matches = regex.exec(input)
     return list
 
   konsoleSend: (text, session) ->
     stdout = execFileSync 'qdbus', ['org.kde.konsole*']
-    konsole = stdout.toString('utf8').split(/\r?\n/)[0]
-    throw "Konsole is not running!" if !konsole
-    execFileSync 'qdbus', [konsole,"/Sessions/#{session}",'sendText',text]
+    [k, s] = session.split("\t")
+    execFileSync 'qdbus', [k,"/Sessions/#{s}",'sendText',text]
 
   screenSessions: ->
     stdout = execFileSync 'screen', ['-list']
