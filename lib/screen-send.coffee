@@ -176,7 +176,6 @@ module.exports = ScreenSend =
     return list
 
   konsoleSend: (text, session) ->
-    stdout = execFileSync 'qdbus', ['org.kde.konsole*']
     [k, s] = session.split("\t")
     execFileSync 'qdbus', [k,"/Sessions/#{s}",'sendText',text]
 
