@@ -25,7 +25,7 @@ module.exports = ScreenSend =
       order: 2
       description: "Chunk Size in bytes (zero is no chunk size)",
       type: "integer",
-      default: 1024,
+      default: 512,
       minimum: 0
     sleepTime:
       order: 3
