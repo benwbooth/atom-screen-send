@@ -54,7 +54,7 @@ module.exports = ScreenSend =
 
     @screenSendView = new ScreenSendView sessions, (session)=>
       bufid = atom.workspace.getActiveTextEditor().getBuffer().getId()
-      @session[bufid] = if atom.config.get('screen-send.terminalType') == 'iTerm 2' then @itermGetId(session) else session
+      @session[bufid] = session
       #console.log("list: session=#{@session}")
       @send() if send
 
@@ -147,20 +147,17 @@ module.exports = ScreenSend =
     fs.unlink(path)
 
   itermSessions: ->
-    stdout = execFileSync 'osascript', ['-e','tell application "iTerm" to tell the terminals to return the sessions']
+    stdout = execFileSync 'osascript', ['-e','tell application "iTerm" to tell windows to tell tabs to return sessions']
     list = (item.trim() for item in stdout.toString('utf8').split(","))
     return list
 
-  itermGetId: (session) ->
-    stdout = execFileSync 'osascript', ['-e',"tell application \"iTerm\" to tell #{session} to return id"]
-    id = stdout.toString('utf8').trim()
-    return id
-
   itermSend: (text, session) ->
+    session = session.replace(/session id (\S+)/, 'session id "$1"')
+    session = session.replace(/window id (\S+)/, 'window id "$1"')
     {path, fd} = temp.openSync('screen-send.')
     fs.write(fd, text)
     #console.log("sending text=", text)
-    execFileSync 'osascript', ['-e',"tell application \"iTerm\" to tell terminals to tell session id \"#{session}\" to write contents of file \"#{path}\""]
+    execFileSync 'osascript', ['-e',"tell application \"iTerm\" to tell #{session} to write contents of file \"#{path}\""]
     fs.unlink(path)
 
   konsoleSessions: ->
