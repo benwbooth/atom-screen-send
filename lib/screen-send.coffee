@@ -59,7 +59,7 @@ module.exports = ScreenSend =
       @send() if send
 
   send: ->
-    bufid = atom.workspace.getActiveTextEditor().getBuffer().getId()
+    bufid = atom.workspace.getActiveTextEditor().getBuffer?().getId()
     if !@session[bufid]
       @list(true)
       return
